@@ -17,7 +17,7 @@
 
 
 \usepackage{mathrsfs}
-%\usepackage{mathtools}
+\usepackage{mathtools}
 %\usepackage{wasysym}
 %\usepackage{amssymb}
 %\usepackage{amsmath}
@@ -491,8 +491,15 @@ Currently, the method is limited to smooth outer boundaries. This restriction co
 
 The method should be further investigated in real-world applications where restriction of the transformations to a layer may be necessary. Another avenue of research is the numerical analysis of the transformed equation \eqref{eq:hyp_general} for suitable choices of height function and compactification. The nature of the transformations and the outcomes of numerical experiments suggest that null infinity compactification is local, exact, and stable. A detailed numerical analysis of these properties is lacking. Such research would also be helpful to obtain guidelines for choices of free functions and parameters involved in the transformations, such as the thickness of the null infinity layer or the shape of the height function.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \appendix
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Null infinity and Penrose diagrams}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The method presented in this paper relies on relativistic techniques. Studies on compactification in the applied mathematics literature only consider compactification in space \cite{GroschOrszag77, boyd1982optimization, shen2009some}. For wave propagation problems, however, the time direction must be considered as well. 
 
 Penrose presented compactification of spacetime in a series of papers starting in 1963 \cite{Penrose, Penrose65}. In this appendix, we collect the main ideas as a starting point for the interested reader. 
@@ -501,6 +508,36 @@ Spacetime distances are measured by the Minkowski metric. The metric takes the f
 \[ \eta  = -dt^2 + dr^2  + r^2 d\sigma^2, \]
 where $d\sigma^2 = d\theta^2 + \sin^2\theta d\varphi^2$, the standard metric on the unit sphere. The wave operator is the d'Alembert operator for this metric
 \[ \Box = \eta^{\mu\nu} \partial_\mu \partial_\nu =  \]
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Numerical methods}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+We briefly present the numerical methods used in the experiments of Sect.~\ref{sec:numerical}. We demonstrate the discretization in one representative dimension denoted by $x$. The implementation is publicly available at the compendium site for the paper \cite{compendium}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Finite Difference Method}
+Finite differences are the easiest option to approximate derivatives. We discretize the solution domain with a uniform grid spacing. Let $N$ be the number of grid cells and set $x_i=i h$ with the grid spacing $h=1/N$. A function $u(x)$ has values on the grid denoted by $u_i=u(x_i)$. We approximate derivatives by matrix multiplication as follows
+\[ d_x u|_{x=x_i} \approx \sum_j {D_{ij}^{(1,o)}} u_j, \qquad d_x^2 u|_{x=x_i} \approx \sum_j D_{ij}^{(2,o)} u_j, \]
+where $o$ denotes the order of accuracy. We explicitly type the coefficients into a sparse matrix. One-sided differencing is used at the endpoints. For example, second order spatial differentiation away from endpoints reads 
+\[ \sum_j {D_{ij}^{(1,2)}} u_j  = \frac{1}{2h} (u_{i+1}- u_{i-1}), \quad \sum_j {D_{ij}^{(2,2)}} u_j = \frac{1}{h^2} (u_{i+1}- 2 u_i + u_{i-1}). \]
+One-sided differencing at the right boundary, $x_N$, gives
+\[ \sum_j {D_{Nj}^{(1,2)}} u_j = \frac{1}{2h}(u_N - 4 u_{N-1} + 3 u_{N-2}),\]
+and
+\[ \sum_j {D_{Nj}^{(2,2)}} u_j = \frac{1}{h^2}(2 u_N - 5 u_{N-1} + 4 u_{N-2} - u_{N-3}).\]
+Higher-order derivatives have wider stencils. The matrices are implemented up to 6th order using the Python package scipy \cite{2020SciPy-NMeth}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Chebyshev Collocation Method}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Fourier Collocation Method}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Weighted spectral-Galerkin Method}
+
 
 \section*{Acknowledgments}
 I thank the Institute for Physical Science and Technology and its director Konstantina Trivisa for providing me space and time to perform this research. I thank Rodrigo Panosso Macedo, Ricardo Nochetto, and Eitan Tadmor for valuable discussions, and Jie Shen for reminding me of the references \cite{wang2017perfect, yang2021truly}. 
