@@ -541,7 +541,15 @@ One-sided differencing at the right boundary, $x_N$, gives
 \[ \sum_j {D_{Nj}^{(1,2)}} u_j = \frac{1}{2h}(u_N - 4 u_{N-1} + 3 u_{N-2}),\]
 and
 \[ \sum_j {D_{Nj}^{(2,2)}} u_j = \frac{1}{h^2}(2 u_N - 5 u_{N-1} + 4 u_{N-2} - u_{N-3}).\]
-Higher-order derivatives have wider stencils. The matrices are implemented up to 6th order using the Python package scipy \cite{2020SciPy-NMeth}.
+Higher-order derivatives have wider stencils. The matrices are implemented up to 6th order as sparse matrices using the Python package scipy \cite{2020SciPy-NMeth}.
+
+We impose Dirichlet boundary conditions in the inner boundary. 
+Second order boundary:
+\[ -\frac{a}{h^2} + \frac{b}{2h} \]
+Fourth order boundary:
+\[ -\frac{-10a}{12 h^2} + \frac{3 b}{12h} \]
+Sixth order boundary:
+\[ -\frac{a}{h^2} + \frac{b}{2h} \]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Chebyshev Collocation Method}
