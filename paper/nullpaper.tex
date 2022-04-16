@@ -106,7 +106,7 @@ Restricting the transformations to an annular domain gives us a layer correspond
 In the next section, we present NIC on a simple one-dimensional example. In Sec.~\ref{sec:nic}, we specify the proposed transformation for the constant-coefficient Helmholtz equation. In Sec.~\ref{sec:nil} we present the restriction of the transformations to a layer. Numerical experiments are presented in Sec.~\ref{sec:numerical}. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Compactification in one dimension with examples}\label{sec:simple}
+\section{Null infinity compactification in one dimension with examples}\label{sec:simple}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The Helmholtz equation \eqref{eq:helm} is related to the wave equation through a time-harmonic ansatz with a single frequency. This relationship is important for our discussion because null infinity compactification involves changing the time coordinate in the wave equation.
 
@@ -125,6 +125,16 @@ Boundary conditions at the origin are not sufficient for uniqueness of solutions
 \label{eq:sommerfeld1d}d_r U - \iu k U = 0 \quad \mathrm{as} \ r\to\infty.
 \ee
 In the following, we will use the outgoing plane wave solution, $U_{p+}(r)=e^{\iu k r}$ to the system \eqref{eq:Helmholtz1d} and \eqref{eq:sommerfeld1d} to demonstrate the impact of transformations.
+
+\begin{itemize}
+\item Write compactification generally
+\item Demonstrate the problem independent of what compactification is used
+\item Solve it by a rescaling
+\item Show that the rescaling is a time transformation
+\item Present examples
+\end{itemize}
+
+We compactify with some given function, and rescale with something else. What's the resulting equation.
 
 \subsection{Example 1 (Bizoń-Mach)}
 Mapping the infinite domain to a finite domain leads to an equation with a singular term. We map the unbounded domain, $r\in[0,\infty)$, to a compact domain adding the point at infinity, $\rho\in[0,1]$, using the transformation
@@ -148,6 +158,12 @@ One cannot specify a value for the solution of the differential equation, or for
 Note that the condition is not supplied separately. It is a consequence of the equation evaluated at the outer boundary.
 
 \subsection{Example 2 (Hyperbolic geometry and the conformal model)}
+
+\subsection{Example 3 (Trigonometric compactification)}
+
+\subsection{Example 4 (Exponential mapping)}
+
+\subsection{Example 5 (Algebraic mapping)}
 
 \subsection{Relation to time transformations}\label{sec:time}
 
@@ -529,10 +545,6 @@ Higher-order derivatives have wider stencils. The matrices are implemented up to
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Chebyshev Collocation Method}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Fourier Collocation Method}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

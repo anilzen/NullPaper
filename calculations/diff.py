@@ -3,9 +3,10 @@
 ####################################
 
 import scipy.sparse as sp
+import numpy as np
 
-# Finite Difference
-def Diff_mat_1D_o2(Nx, dx, periodic=False):
+# Finite difference
+def fd_o2(Nx, dx, periodic=False):
 
     # First derivative
     D_1d = sp.diags([-1, 1], [-1, 1], shape=(Nx, Nx))
@@ -30,7 +31,7 @@ def Diff_mat_1D_o2(Nx, dx, periodic=False):
     return D_1d/(2*dx), D2_1d/(dx**2)
 
 
-def Diff_mat_1D_o4(Nx, dx, periodic=False):
+def fd_o4(Nx, dx, periodic=False):
 
     # First derivative
     D_1d = sp.diags([1, -8, 8, -1], [-2, -1, 1, 2], shape=(Nx, Nx))
@@ -65,7 +66,7 @@ def Diff_mat_1D_o4(Nx, dx, periodic=False):
     return D_1d/(12*dx), D2_1d/(12*dx**2)
 
 
-def Diff_mat_1D_o6(Nx, dx, periodic=False):
+def fd_o6(Nx, dx, periodic=False):
 
     # First derivative
     D_1d = sp.diags(
@@ -108,17 +109,37 @@ def Diff_mat_1D_o6(Nx, dx, periodic=False):
         D2_1d[-3, [-8, -7, -6, -5, -4, -3, -2, -1]] = [-2, 16, -54, 85, 130, -378, 214, -11]
     return D_1d/(60*dx), D2_1d/(180*dx**2)
 
+# Chebyshev-collocation
 
+def cheb(N, r0, r1):
+    x = np.cos(np.pi * np.arange(0, N + 1) / N)
+    if N % 2 == 0:
+        x[N // 2] = 0.0
+    c = np.ones(N + 1)
+    c[0] = 2.0
+    c[N] = 2.0
+    c = c * (-1.0) ** np.arange(0, N + 1)
+    c = c.reshape(N + 1, 1)
+    X = np.tile(x.reshape(N + 1, 1), (1, N + 1))
+    dX = X - X.T
+    D = np.dot(c, 1.0 / c.T) / (dX + np.eye(N + 1))
+    D = D - np.diag(D.sum(axis=1))
+    r_mid = 0.5 * (r0 + r1)
+    r = 0.5 * (r1 - r0) * x + r_mid
+    D1 = 2.0 / (r1 - r0) * D
+    D2 = 4.0 / (r1 - r0) ** 2 * D.dot(D)
+    return D1[::-1,::-1], D2[::-1,::-1], r[::-1]
+    
 # def Diff_mat_2D(Nx, Ny, y_periodic=False, y_order=2):
 
 #     # 1D differentiation matrices
-#     Dx_1d, D2x_1d = Diff_mat_1D(Nx)
+#     Dx_1d, D2x_1d = fd(Nx)
 #     if y_order == 2:
-#         Dy_1d, D2y_1d = Diff_mat_1D(Ny, y_periodic)
+#         Dy_1d, D2y_1d = fd(Ny, y_periodic)
 #     elif y_order == 4:
-#         Dy_1d, D2y_1d = Diff_mat_1D_o4(Ny, y_periodic)
+#         Dy_1d, D2y_1d = fd_o4(Ny, y_periodic)
 #     elif y_order == 6:
-#         Dy_1d, D2y_1d = Diff_mat_1D_o6(Ny, y_periodic)
+#         Dy_1d, D2y_1d = fd_o6(Ny, y_periodic)
 #     else:
 #         print("y_order " + str(y_order) + " has not been implemented")
 
@@ -137,68 +158,3 @@ def Diff_mat_1D_o6(Nx, dx, periodic=False):
 
 #     # Return compressed Sparse Row format of the sparse matrices
 #     return Dx_2d.tocsr(), Dy_2d.tocsr(), D2x_2d.tocsr(), D2y_2d.tocsr()
-
-
-# def set_Diff_matrices(M, dr, dt, y_periodic=False, y_order=2):
-#     # Construct the differentiation matrices
-#     Dr, Dt, Dr2, Dt2 = Diff_mat_2D(M, M, y_periodic=y_periodic, y_order=y_order)
-#     I_sp = sp.eye(M * M).tocsr()
-
-#     Dr = Dr / (2 * dr)
-#     Dr2 = Dr2 / dr ** 2
-
-#     if y_order == 2:
-#         Dt = Dt / (2 * dt)
-#         Dt2 = Dt2 / dt ** 2
-#     elif y_order == 4:
-#         Dt = Dt / (12 * dt)
-#         Dt2 = Dt2 / (12 * dt ** 2)
-#     elif y_order == 6:
-#         Dt = Dt / (60 * dt)
-#         Dt2 = Dt2 / (180 * dt ** 2)
-#     else:
-#         print("y_order: " + str(y_order) + " not implemented")
-#     return Dr, Dr2, Dt, Dt2
-
-
-# # Collocation methods
-
-# def cheb(N):
-#     x = np.cos(np.pi * np.arange(0, N + 1) / N)
-#     if N % 2 == 0:
-#         x[N // 2] = 0.0
-#     c = np.ones(N + 1)
-#     c[0] = 2.0
-#     c[N] = 2.0
-#     c = c * (-1.0) ** np.arange(0, N + 1)
-#     c = c.reshape(N + 1, 1)
-#     X = np.tile(x.reshape(N + 1, 1), (1, N + 1))
-#     dX = X - X.T
-#     D = np.dot(c, 1.0 / c.T) / (dX + np.eye(N + 1))
-#     D = D - np.diag(D.sum(axis=1))
-#     return D, x
-
-
-# def chebfft(v):
-#     N = len(v) - 1
-#     if N == 0:
-#         w = 0.0  # only when N is even!
-#         return w
-#     x = cos(pi * arange(0, N + 1) / N)
-#     ii = arange(0, N)
-#     V = flipud(v[1:N])
-#     V = list(v) + list(V)
-#     U = real(fft(V))
-#     b = list(ii)
-#     b.append(0)
-#     b = b + list(arange(1 - N, 0))
-#     w_hat = 1j * array(b)
-#     w_hat = w_hat * U
-#     W = real(ifft(w_hat))
-#     w = zeros(N + 1)
-#     w[1:N] = -W[1:N] / sqrt(1 - x[1:N] ** 2)
-#     w[0] = sum(ii ** 2 * U[ii]) / N + 0.5 * N * U[N]
-#     w[N] = (
-#         sum((-1) ** (ii + 1) * ii ** 2 * U[ii]) / N + 0.5 * (-1) ** (N + 1) * N * U[N]
-#     )
-#     return w
