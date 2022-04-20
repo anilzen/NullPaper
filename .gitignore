@@ -1,0 +1,12 @@
+.ipynb_checkpoints/
+.vscode/
+__pycache__
+*.blg
+*.bbl
+*.ps
+*.thm
+*.aux
+*.log
+*.out
+*.dvi
+*.synctex.gz
