@@ -47,11 +47,11 @@
 \maketitle
 
 \begin{abstract}
-We show how to solve time-harmonic wave scattering problems on unbounded domains without truncation. The technique, first developed in numerical relativity for time-domain wave equations, maps the unbounded domain to a bounded domain and scales out the known oscillatory decay towards infinity. We design a null infinity layer for the infinite exterior domain that restricts the transformations to an annular domain. The method does not require the local Green function. Therefore we can use it to solve Helmholtz equations with variable coefficients and certain nonlinear source terms. The method's main advantages are the exact treatment of the local boundary and access to radiative fields at infinity. The freedom in the transformations allows us to choose parameters adapted to high-frequency wave propagation in the exterior domain. We demonstrate the technique's efficiency in one- and two-dimensional numerical examples.
+We solve time-harmonic wave scattering problems on unbounded domains. The technique, first developed in numerical relativity for time-domain wave equations, maps the unbounded domain to a bounded domain and scales out the known oscillatory decay towards infinity. We design a layer for the infinite exterior domain that restricts the transformations to an annular domain. The method does not require the local Green function and can therefore be applied to a wide range of problems including variable coefficients and nonlinear source terms. The method's main advantages are the exact treatment of the local boundary and access to radiative fields at infinity. The freedom in the transformations allows us to choose parameters adapted to high-frequency wave propagation in the exterior domain. We demonstrate the technique's efficiency in one- and two-dimensional numerical examples.
 \end{abstract}
 
 \begin{keywords}
-	Helmholtz equation, unbounded domain, high wavenumbers, null infinity, hyperboloidal
+	Helmholtz equation, unbounded domain, high wavenumbers, null infinity %,hyperboloidal 
 \end{keywords}
 
 \begin{AMS}
@@ -68,16 +68,23 @@ We show how to solve time-harmonic wave scattering problems on unbounded domains
 \section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{itemize}
-\item General background of problem
-\item What is the problem?
-\item Past effort
-\item Caveats of past effort, alternatives
-\item What are you doing in this paper to solve the problem?
-\item Roadmap for the paper
-\end{itemize}
+% General background of the problem
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{The problem}
+Wave propagation problems on unbounded domains appear in many areas of science and technology. The equations that describe these problems vary widely in complexity and structure: scalar wave equations describe acoustic and seismic waves, vector wave equations describe electromagnetic waves, and tensor wave equations describe gravitational waves. The equations may have variable coefficients or include nonlinear terms depending on the application. Despite this diversity, solutions to wave equations share some essential properties.
 
-We consider time-harmonic wave scattering from a bounded obstacle $D \subset \mathbb{R}^d$ in $d$ dimensions. The scattered wave, $U$, satisfies the Helmholtz equation and the Sommerfeld radiation condition at infinity
+Generally, wave equations have oscillatory solutions that propagate to infinity. While the meaning of oscillatory solutions is intuitively clear, propagation to infinity is harder to understand. What is meant by this statement is that generic solutions to wave equations decay slowly. When the energy of a propagating wave is conserved, the amplitude of the wave in $d$-dimensional space decays only as $r^{\frac{1-d}{2}}$ where $r$ denotes the distance to the source of the wave. 
+
+This slow decay is what makes waves important in applications because we can measure them far away from the source. The computation of the far-field pattern is the primary goal in many problems. The echo area for acoustic waves, the radar cross section for electromagnetic scattering, or the gravitational flux are all defined with a limit to infinite distance. The relevance of the behavior of solutions at infinity makes numerical calculations of wave equations a difficult problem.
+
+The task is to compute oscillatory solutions on infinite domains. Consider a time-harmonic plane wave that fills out the entire spatial domain, $e^{\iu k r}$, with wavenumber $k$ on $r\in[0,\infty)$. \emph{How can we solve an equation describing infinitely many oscillations with the finite resources of a computer?}
+
+This paper answers the above question by employing relativistic methods, in particular, the unification of space and time into spacetime, conformal structure, and hyperbolic geometry. They allow us to compute oscillatory solutions to time-harmonic wave equations on unbounded domains without resorting to approximations other than numerical discretization. The methods are agnostic of the fundamental solution, and can therefore be applied to a wide variety of problems in science and engineering.
+
+% Problem description and past effort
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Helmholtz equation}
+One of the simplest cases where the computational difficulties with wave equations are apparent is the linear, constant-coefficient, source-free Helmholtz equation. Consider the problem of time-harmonic wave scattering from a bounded obstacle $D \subset \mathbb{R}^d$ in $d$ dimensions. The scattered wave, $U$, satisfies the Helmholtz equation and the Sommerfeld radiation condition at infinity
 \begin{equation}
 	\label{eq:helm}
 	\begin{gathered}
@@ -85,16 +92,35 @@ We consider time-harmonic wave scattering from a bounded obstacle $D \subset \ma
 		\partial_r U - \iu k U = o\left(r^{\frac{1-d}{2}}\right) \quad \mathrm{as} \ r\to\infty,\ d=1,2,3.
 	\end{gathered}
 \end{equation}
-Dirichlet or Neumann conditions are given on the surface of the scatterer $D$.
+Dirichlet or Neumann conditions are given on the surface of the scatterer $D$. The two computational difficulties for this problem are: (i) the unbounded domain and (ii) the highly oscillatory behavior of the solution for high wavenumbers $k$. Both difficulties have been active areas of research with an extensive list of proposed treatments (see reviews \cite{TSYNKOV1998465, HagstromReview, engquist2003computational}).
 
-Two essential difficulties for this problem are: (i) the unbounded domain and (ii) the highly oscillatory behavior of the solution for high wave numbers $k$. Both difficulties have been active areas of research with an extensive list of proposed treatments (see reviews \cite{TSYNKOV1998465, HagstromReview, engquist2003computational}).
+% Past effort
+Methods for handling the unbounded domain fall into two main categories: local and exact \cite{TSYNKOV1998465, HagstromReview, givoli2013numerical}. The term exact refers boundary treatments that are free from approximations other than discretization. Local methods are convenient but approximate, while exact methods are accurate but cumbersome. 
 
-Methods for handling the unbounded domain fall into two main categories: local and exact \cite{TSYNKOV1998465, HagstromReview, givoli2013numerical}. Local methods are convenient but approximate, while exact methods are accurate but cumbersome. Local methods are most common due to their convenience and generality. They include high-order boundary conditions \cite{EngquistMajda77, BaylissTurkel80} and absorbing regions \cite{israeli1981approximation, BERENGER1994185}. There are spectrally convergent local methods that may be sufficiently accurate for many applications \cite{hagstrom2009complete}. Exact methods, on the other hand, provide better accuracy but are non-local and therefore computationally expensive \cite{keller1989exact, GROTE1998327, grote1996nonreflecting}. Sophisticated methods exist for the fast evaluation of the associated kernels \cite{alpert2000rapid}, but they are hard to implement. In summary, there are excellent methods available to deal with outer boundaries that achieve great accuracy for certain sets of problems. There is, however, no {\it local and exact} treatment of the numerical outer boundary, and the topic is an active area of research \cite{9196168, kirby2020finite, papadimitropoulos2020double, petropavlovsky2020numerical, duhamel2020computation}.
+Local methods are most common due to their convenience and generality. They include high-order boundary conditions \cite{EngquistMajda77, BaylissTurkel80} and absorbing regions \cite{israeli1981approximation, BERENGER1994185}. A prominent example of absorbing regions is the perfectly matched layer \cite{BERENGER1994185} where solutions to wave equations are damped exponentially thereby avoiding reflections from the outer boundary. Among high-order boundary conditions, there are spectrally convergent local methods that may be sufficiently accurate for many applications \cite{hagstrom2009complete}. 
 
+Exact methods, on the other hand, provide better accuracy but are non-local and therefore computationally expensive \cite{keller1989exact, GROTE1998327, grote1996nonreflecting}. Sophisticated methods exist for the fast evaluation of the associated kernels \cite{alpert2000rapid}, but they are hard to implement. 
 
-In principle, compactification would be a local and exact method to compute unbounded domain solutions to Helmholtz equations. Mapping the unbounded solution domain to a bounded numerical domain would allow us to solve the equation without the need for an outer boundary treatment \cite{GroschOrszag77, boyd1982optimization, shen2009some}. However, this method leads to slow convergence for wave equations due to infinite oscillations in the asymptotic region \cite{GroschOrszag77, shen2014approximations}. The mapped finite grid cannot represent infinite oscillations.
+Global methods such as the boundary integral method do provide the unbounded domain solution and  are the preferable method for the constant-coefficient Helmholtz equation \eqref{eq:helm}. However, they rely on the availability of the fundamental solution (the Green function) and do not generalize to other equations where the Green function is not available in closed form.
 
-In the time domain, a suitable transformation of the time coordinate solves the infinite resolution problem for the wave equation \cite{ZENGINOGLU20112286}. Even though there is no time coordinate in the Helmholtz equation, one can still perform the time transformation as a rescaling of the unknown variable that takes out the known oscillatory behavior of the solution in the asymptotic domain \cite{ZengFramework}.
+% Caveats of past effort
+While there are excellent methods available to deal with outer boundaries that achieve great accuracy for certain sets of problems, there is no {\it local and exact} treatment of the numerical outer boundary that can be generalized to a wide range of problems. The topic is an active area of research \cite{9196168, kirby2020finite, papadimitropoulos2020double, petropavlovsky2020numerical, duhamel2020computation}. In addition, these methods do not provide the far-field solution, which therefore must be computed on a separate post-processing step. 
+
+In principle, mapping the unbounded domain to a bounded domain would be a local and exact method. The mapping translates the global problem to a local problem. A bounded domain can be represented with finite resources on a computer which would allow us to compute the solution without truncating the simulation domain. However, studies using such mappings have demonstrated that they lead to slow convergence and reflected waves near the boundary of the mapped domain when the mapping is applied to problems with oscillatory solutions \cite{GroschOrszag77, boyd1982optimization, shen2009some, shen2014approximations}. The mapping squeezes the oscillations and drives the wavelength to zero near the domain boundary. When the grid spacing gets larger than half a wavelength, convergence is lost \cite{GroschOrszag77}. The mapping translates the infinite domain problem to an infinite resolution problem because there are still infinitely many oscillations on the numerical grid.
+
+% Your solution
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Proposed solution}
+The infinite resolution problem described above can be solved by a suitable transformation of the time coordinate \cite{ZENGINOGLU20112286}.
+
+\begin{itemize}
+\item Minkowksi: unification of space and time into spacetime, even though there is no time in the frequency domain.
+\item Penrose: compactification along the characteristic (null) direction
+\item Hyperbolic: generalization using hyperbolic geometry 
+\item Compactified wave equation have been solved as early as the 1980s (Isaacson, Winicour). Remarkable that this has not been communicated for such a long time. The purpose of this paper is to demonstrate these relativistic techniques on the prototypical Helmholtz equations for potential applications in non-relativistic science and engineering problems.
+\end{itemize}
+
+Even though there is no time coordinate in the Helmholtz equation, one can still perform the time transformation as a rescaling of the unknown variable that takes out the known oscillatory behavior of the solution in the asymptotic domain \cite{ZengFramework}.
 
 The transformation is inspired by Penrose compactification, and the notion of conformal infinity in relativity \cite{Penrose, Penrose65, Frauendiener2004, Winicour2012}. It consists of the following three steps:
 \begin{itemize}
@@ -102,7 +128,7 @@ The transformation is inspired by Penrose compactification, and the notion of co
 	\item[(ii)] Scale out the known oscillatory behavior.
 	\item[(iii)] Map the unbounded domain to a bounded domain.
 \end{itemize}
-This method is an application of hyperboloidal compactification (\cite{Zenginoglu08, ZENGINOGLU20112286, Macedo_2020}) to time-harmonic solutions \cite{ZengFramework, ansorg2016spectral, macedo2018hyperboloidal, bizon2020toy, jaramillo2021pseudospectrum, jaramillo2021gravitational, destounis2021pseudospectrum, gasperin2021physical}. It includes compactification along characteristic surfaces as a special case. The outer boundary of the mapped solution domain corresponds to null infinity. Therefore, we refer to the method as \emph{null infinity compactification} (NIC).
+This method is an application of hyperboloidal compactification (\cite{Zenginoglu08, ZENGINOGLU20112286, Macedo_2020}) to time-harmonic solutions \cite{ZengFramework, ansorg2016spectral, macedo2018hyperboloidal, bizon2020toy, jaramillo2021pseudospectrum, jaramillo2021gravitational, destounis2021pseudospectrum, gasperin2021physical}. It includes compactification along characteristic surfaces as a special case. The outer boundary of the mapped solution domain corresponds to null infinity. Null infinity is a relativistic term that refers to infinity along characteristic (null) directions (see App.~\ref{} for an explanation of the terminology). Therefore, we refer to the method as \emph{null infinity compactification} (NIC).
 
 This paper uses null infinity compactification to solve the Helmholtz equation on unbounded domains with local methods. Access to the entire solution leads to an exact method that does not require an approximate boundary treatment and has only discretization errors. The lack of a numerical boundary treatment improves computational efficiency. In addition, one has direct access to the solution at infinity, simplifying the extraction of radiative solutions in the far field. Such access is essential in many applications where limits at infinity provide observables of interest, such as the echo area in acoustics, the radar cross-section in electromagnetics, or the gravitational waveform in general relativity.
 
@@ -112,6 +138,7 @@ A significant advantage of null infinity compactification in the frequency domai
 
 Restricting the transformations to an annular domain gives us a layer corresponding to the infinite exterior domain with the boundary at null infinity. This null infinity layer (NIL) differs from the hyperboloidal layer of \cite{ZENGINOGLU20112286} because it can use both characteristic and hyperboloidal coordinates. NIL with characteristic coordinates is similar to the perfectly absorbing layer of \cite{wang2017perfect, yang2021truly} except that the solution is not artificially damped in the layer, and the radiative solution at infinity can be obtained at the numerical outer boundary. In addition, NIL does not rely on the local Green function. The method can be applied to equations with variable coefficients or nonlinear source terms if certain asymptotic fall-off conditions are satisfied. 
 
+% Roadmap
 In the next section, we present NIC on a simple one-dimensional example. In Sec.~\ref{sec:nic}, we specify the proposed transformation for the constant-coefficient Helmholtz equation. In Sec.~\ref{sec:nil} we present the restriction of the transformations to a layer. Numerical experiments are presented in Sec.~\ref{sec:numerical}. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -119,20 +146,20 @@ In the next section, we present NIC on a simple one-dimensional example. In Sec.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Spatial compactification for equations with oscillatory solutions is ineffective because infinitely many oscillations cannot be resolved on a finite, compactified domain \cite{GroschOrszag77, shen2014approximations}. As an example, consider the one-dimensional plane wave $U_p(r) = e^{\iu k r}$. Compactification with $\rho=\tanh r$ from the unbounded domain $r\in[0,\infty)$ to the bounded domain $\rho\in[0,1)$ gives
 \[ U_p(\rho) =   e^{\iu k \arctanh\rho} = \left(\frac{1+\rho}{1-\rho}\right)^{\frac{\iu k}{2}}.\]
-The solution is singular at the domain boundary $\rho=1$. However, we can remove the singularity by a rescaling. For example, the rescaled plane wave
+The solution is singular at the domain boundary, $\rho=1$. However, we can remove the singularity by a rescaling. For example, the rescaled plane wave
 \be\label{eq:plane_tanh} u_p(\rho) =  (1-\rho^2)^{\frac{\iu k}{2}} U_p(\rho) = (1+\rho)^{\iu k}, \ee
 is a regular function on the bounded $\rho$-domain. Compactifying the bounded domain by adding the point at infinity, we can solve the transformed Helmholtz equation for the rescaled variable $u(\rho)$ on $\rho\in[0,1]$. 
 
-The combination of rescaling with compactification is the crucial idea behind the method presented in this paper. To see its impact on the differential equation, consider the one-dimensional Helmholtz equation with the Sommerfeld radiation condition
+The combination of rescaling with compactification is the main idea behind the method presented in this paper. To see its impact on the differential equation, consider the one-dimensional Helmholtz equation with the Sommerfeld radiation condition
 \begin{align}
 \label {eq:Helmholtz1d} d_r^2 U + k^2 U &= 0, \quad r\in[0,\infty),\\
 \label{eq:Sommerfeld1d}d_r U - \iu k U &= 0 \quad \mathrm{as} \ r\to\infty.
 \end{align}
-Given boundary conditions at $r=0$, the system above has unique solutions. The Sommerfeld radiation condition \eqref{eq:Sommerfeld1d} is necessary for uniqueness of solutions to the Helmholtz equation because the underlying wave equation allows both for incoming and outgoing waves. For example, given boundary data at the origin $U(0)=1$, there are two plane wave solutions that satisfy the Helmholtz equation: $U_{p+}(r) = e^{\iu k r}$ and $U_{p-}(r) = e^{-\iu k r}$. The Sommerfeld radiation condition selects the outgoing waves.
+Given boundary conditions at $r=0$, the system above has unique solutions. The Sommerfeld radiation condition \eqref{eq:Sommerfeld1d} is necessary for uniqueness of solutions to the Helmholtz equation because the underlying wave equation allows both for incoming and outgoing waves. For example, the boundary data at the origin, $U(0)=1$, admits two plane wave solutions: an outgoing one, $U_{p+}(r) = e^{\iu k r}$, and an incoming one, $U_{p-}(r) = e^{-\iu k r}$. The Sommerfeld radiation condition selects the outgoing waves.
 
 We scale out asymptotic oscillations from solutions to the Helmholtz equation by
 \be\label{eq:rescaling} u(r) = e^{-\iu k h(r)} U(r).\ee
-We choose the height function, $h(r)$, such that it approaches $r$ asymptotically. Then, the effective wavenumber of rescaled solutions vanishes at infinity. The Helmholtz equation \eqref{eq:Helmholtz1d} for the rescaled variable $u(r)$ in \eqref{eq:rescaling} reads
+We refer to $h(r)$ as the height function as is common in relativity \cite{reinhart1973maximal, beig1996vacuum}. We  choose a height function that approaches $r$ in the asymptotic limit. This rescaling flattens the waves such that the effective wavenumber of rescaled solutions vanishes at infinity. The Helmholtz equation \eqref{eq:Helmholtz1d} for the rescaled variable $u(r)$ in \eqref{eq:rescaling} reads
 \be\label{eq:resc_helm}
 d_r^2 u + 2 \iu k H d_r u + \left[ k^2 (1-H^2) + \iu k d_r H\right] u = 0.
 \ee
@@ -143,7 +170,7 @@ The boost function, $H(r) :=d_r h(r)$, is the derivative of the height function 
 The effective wavenumber takes the form $k^2(1-H^2)$, which vanishes as $r\to\infty$. Next, we demonstrate the relationship of the vanishing wavenumber to time transformations. This relationship will also explain the term null infinity that qualifies the compactification procedure.
 
 \subsection{Time transformation and the flattening of waves} 
-Rescalings of the type \eqref{eq:rescaling} appear in the literature on Helmholtz equations for $h(r)=r$, for example, in boundary integral methods \cite{chandler2012numerical} or infinite elements \cite{demkowicz2006few}.
+Various methods use similar rescalings of the type \eqref{eq:rescaling} to study Helmholtz equations but for the special case of $h(r)=r$. This choice removes all oscillations from the outgoing plane wave solution and corresponds to compactification along characteristic (null) surfaces. The infinite element method \cite{demkowicz2006few}, boundary integral methods \cite{chandler2012numerical} and the perfect absorbing layer \cite{wang2017perfect, yang2021truly} all use this rescaling to remove oscillations from the outgoing solution. The pole condition in \cite{schmidt2008pole} is also related to this rescaling through the Laplace-transformation in combination with the scaling out of the asymptotic decay. The height function approach generalizes these methods in a geometric framework and increases the flexibility of null infinity compactification for handling heterogeneous media and smoothly matched layers. When the boost is strictly less than unity, we get compactification along hyperboloidal time surfaces \cite{Zenginoglu08}. 
 
 To see how such rescalings correspond to time transformations, we recap the derivation of the Helmholtz equation from the time-domain wave equation. Consider the wave equation for the scalar function $V(r,t)$ in spacetime coordinates $(r,t)\in[0,\infty)\times[0,\infty)$ with unit speed of propagation
 \be\label{eq:1dwave} \partial_t^2 V - \partial_r^2 V = 0\,. \ee
@@ -157,7 +184,7 @@ We now introduce a new time coordinate $\tau$ that satisfies $\partial_\tau=\par
 \be\label{eq:tau} \tau = t - h(r).\ee
 The height function, $h(r)$, determines the height of the new time coordinate $\tau$ with respect to $t$ on a spacetime diagram. The single frequency ansatz in $\tau$ reads
 \[ V(r, \tau) = e^{-\iu k \tau} u(r) = e^{-\iu k t} e^{\iu k h(r)} u(r)\,.\]
-Comparing with \eqref{eq:ansatz}, we see that the time transformation \eqref{eq:tau} in time domain corresponds to the rescaling, or more accurately, the phase shift \eqref{eq:rescaling} in frequency domain \cite{ZengFramework, marchner2021stable}.
+Comparing with \eqref{eq:ansatz}, we see that the time transformation \eqref{eq:tau} in time domain corresponds to the rescaling, or more accurately, the phase shift \eqref{eq:rescaling} in frequency domain \cite{ZengFramework, ansorg2016spectral, macedo2018hyperboloidal, marchner2021stable}.
 
 \begin{figure}[h]
 \centering
@@ -168,9 +195,9 @@ Comparing with \eqref{eq:ansatz}, we see that the time transformation \eqref{eq:
 
 The flattening of the waves due to time transformation is best understood with respect to a time-domain solution. Consider the outgoing sine-wave $V_p(r,t) = \sin(t-r)$. We introduce a time coordinate whose level sets are spacetime hyperbola
 \be\label{eq:hyperbola} \tau = t - \sqrt{1+r^2}.\ee
-Such time coordinates resembling spacetime hyperbola are called hyperboloidal. Their two main properties are that their level sets are spacelike everywhere, thereby allowing the definition of a time coordinate; and they approach the null cone asymptotically (see App.~\ref{sec:app_penrose}). The sine-wave in hyperboloidal time becomes $V_p(r,\tau) = \sin\left(\tau + \sqrt{1+r^2} - r\right)$. The wavenumber of this function on level sets of $\tau$ vanishes as $r\to\infty$. We visualize the flattening of the waves in a spacetime diagram in Fig.~\ref{fig:flattening}.
+Time coordinates resembling spacetime hyperbola in their causal behavior are called hyperboloidal. Their two main properties are that their level sets are spacelike, allowing the definition of a time coordinate; and that they approach the null cone asymptotically (see App.~\ref{sec:app_penrose}). The sine-wave in hyperboloidal time becomes $V_p(r,\tau) = \sin\left(\tau + \sqrt{1+r^2} - r\right)$. The wavenumber of this function on level sets of $\tau$ vanishes as $r\to\infty$. We visualize the flattening of the waves in a spacetime diagram in Fig.~\ref{fig:flattening}.
 
-\subsection{Null infinity compactification}
+\subsection{Null infinity compactification}\label{sec:nic}
 The rescaling \eqref{eq:rescaling} makes the Helmholtz equation \eqref{eq:resc_helm} amenable to compactification. Spatial mappings from unbounded to bounded domains are well-known and have been extensively studied in the context of wave equations \cite{GroschOrszag77, boyd1982optimization, shen2009some, wang2017perfect}. We write the mapping in a general form as
 \[ r = r(\rho), \quad r\in[0,\infty),\ \rho\in[0,S), \]
 such that
@@ -187,7 +214,7 @@ d_\rho (G d_\rho u) + 2 \iu k H d_\rho u + \left(k^2 \frac{1-H^2}{G} + \iu k \, 
 The compactification and the time transformation (or equivalently, the rescaling) ensure together regularity of the effective wavenumber, $k^2 (1-H^2)/G$, at the domain boundary where $H=1$ and $G=0$. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Examples}
+\section{Examples}\label{sec:examples}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 In this section, we list five examples of compactification to demonstrate the interplay of time transformation and spatial compactification. We map the unbounded domain $r\in[0,\infty)$ to the compact domain $\rho\in[0,1]$, except for Example 3 where the compact domain is $\rho\in[0,\frac{\pi}{2}]$. A suitably chosen time transformation regularizes the outgoing plane wave solution, $u_p(\rho)$.
 
@@ -197,7 +224,7 @@ There is large flexibility in the transformations. The goal in this paper is to 
 \subsection{Example 1 (hyperbolic tangent)}
 We have already encountered compactification with the hyperbolic tangent at the beginning of Sec.~\ref{sec:nic1d}. This compactification leads to algebraically simple equations and is used in studies of wave equations and quasinormal modes (\cite{bizon2017global, bizon2020toy, donninger2020strichartz}). The spatial mapping is
 \be\label{eq:ex1_mapping} r = \arctanh \rho, \qquad G(\rho) = \frac{1}{r'(\rho)} = 1-\rho^2. \ee
-The choice of $H$ that leads to the algebraically simplest form of the effective wavenumber in \eqref{eq:trafo_helm} is $H=\rho$ which gives $(1-H^2)/G=1$ and $d_\rho H=1$. We have
+The choice of $H$ that leads to the algebraically simplest form of the Helmholtz equation in \eqref{eq:trafo_helm} is $H=\rho$ which gives $(1-H^2)/G=1$ and $d_\rho H=1$. We have
 \[ h(r) = \log(\cosh r), \qquad H(\rho) = \rho. \]
 The rescaled plane wave is a smooth, regular function given by \eqref{eq:plane_tanh}
 \[ u_p(\rho) = (1+\rho)^{\iu k}.\]
@@ -209,13 +236,13 @@ The condition is not supplied separately. It is a consequence of the equation ev
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Example 2 (hyperbolic geometry and the conformal disk model)}
-This example serves to demonstrate the relationship of null infinity compactification, hyperbolic geometry, and hyperboloidal time surfaces. One of the main models of hyperbolic geometry is the hyperboloid model \cite{thurston1979geometry, loustau2020hyperbolic}.  The circle of imaginary radius $\iu$ about the origin in a two-dimensional Minkowski space is the hyperboloid
+This example serves to demonstrate the relationship of null infinity compactification, hyperbolic geometry, and hyperboloidal time surfaces. One of the main models of hyperbolic geometry is the hyperboloid model \cite{thurston1979geometry, loustau2020hyperbolic}.  The hyperboloid is the circle of imaginary radius $\iu$ about the origin in a two-dimensional Minkowski space described by
 \[ -t^2 + r^2 = -1. \]
-The metric restricted to this surface is positive definite. We shift such a hyperboloid along time, $(t-\tau)^2 - r^2 = 1$, and use the shift as the new time coordinate which gives $\tau = t - \sqrt{1+r^2}$. The minus sign ensures that the time coordinate approaches the outgoing null cone asymptotically. The level sets of $\tau$ are homogeneous spaces of constant negative curvature. We get for the height and boost functions
-\be h(r) = \sqrt{1+r^2}, \qquad H(r) = \frac{r}{\sqrt{1+r^2}}.\ee
+The metric restricted to this surface is positive definite. We shift such a hyperboloid along time, $(t-\tau)^2 - r^2 = 1$, and use the shift as the new time coordinate, which gives $\tau = t \pm \sqrt{1+r^2}$. Choosing the minus sign ensures that the time surfaces approach the outgoing null cone asymptotically. The level sets of $\tau$ are homogeneous spaces of constant negative curvature. We get for the height and boost functions
+\be \label{eq:ex2_height} h(r) = \sqrt{1+r^2}, \qquad H(r) = \frac{r}{\sqrt{1+r^2}}.\ee
 The hyperboloid model of hyperbolic geometry is an open space. The conformal disk model (also known as the Poincar\'e model) of hyperbolic geometry is obtained by compactification with
 \be\label{eq:ex2_mapping} r =  \frac{2\rho}{1-\rho^2}, \qquad G(\rho) = \frac{(1-\rho^2)^2}{2(1+\rho^2)}. \ee
-These two transformations have been used in time domain computations of wave equations \cite{FodorRacz04, fodor2008numerical, Bizo__2009, ZenginogluKidder10}. The rescaled plane wave in frequency domain becomes 
+The choices \eqref{eq:ex2_height} and \eqref{eq:ex2_mapping} have been used in time domain computations of wave equations \cite{FodorRacz04, fodor2008numerical, Bizo__2009, ZenginogluKidder10}. The rescaled plane wave in frequency domain becomes 
 \[ u_p(\rho) = \exp\left(-\iu k \frac{1-\rho}{1+\rho}\right). \]
 The transformed Helmholtz equation reads
 \begin{align*} 
@@ -231,8 +258,12 @@ The conformal compactification procedure by Penrose \cite{Penrose, Penrose65} th
 The compactified domain is $\rho\in[0,\pi/2]$. In previous examples, the choice of the height function was motivated by algebraic simplicity (Example 1) or geometric background (Example 2). In this example, we make a choice based on outgoing characteristic speeds \cite{ZENGINOGLU20112286, bernuzzi2011binary}. We \emph{require} 
 \be\label{eq:require} \tau - \rho = t - r\,,\ee
 which gives
-\[ \tau = t - r + \arctan r = t - \tan \rho + \rho, \quad H(\rho) = \sin^2\rho. \]
-The outgoing plane wave keeps its coordinate form under these transformations: $u_p(\rho) = e^{\iu k \rho}$. The rescaled equation becomes
+\[ h(r) = r - \arctan r, \quad H(\rho) = \sin^2\rho. \]
+Generally, given a compactification, $r(\rho)$, with its inverse, $\rho(r)$, the height function
+\be\label{eq:invariant} 
+h(r) = r - \rho(r),
+\ee 
+preserves the coordinate form of outgoing plane waves under these transformations so that $u_p(\rho) = e^{\iu k \rho}$. The rescaled equation becomes
 \be\label{eq:transformed} d_\rho(\cos^2 \rho \ d_\rho u ) + 2\iu k \sin^2\rho \ d_\rho u + \left(k^2 (1+\sin^2\rho)+\iu k \sin(2\rho) \right) u = 0. \ee
 Evaluating the equation at the outer boundary, $\rho=\frac{\pi}{2}$ gives the familiar Sommerfeld radiation condition
 \[ d_\rho u - \iu k u = 0. \]
@@ -241,11 +272,11 @@ This example suggests that we may adapt the time coordinate to the problem. The 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Example 4 (exponential)}
-We discuss the next two examples for historical reasons. These examples appear in Grosch and Orszag \cite{GroschOrszag77} where they conclude that spatial mapping alone is ineffective because waves can no longer be resolved on the mapped grid close to the grid boundary. 
+We discuss the next two examples for historical reasons. These examples appear in Grosch and Orszag \cite{GroschOrszag77} where they point out that spatial mapping alone is ineffective because waves can no longer be resolved on the mapped grid close to the grid boundary. 
 
 The exponential map is
 \be\label{eq:ex4_mapping} r = -\ln(1-\rho), \qquad G(\rho) = 1-\rho. \ee
-Again, we have great flexibility in chosing the height function. The main requirement is that the term $(1-H^2)/G$ is regular at $\rho=1$. We demonstrate the case where the outgoing plane wave has the same coordinate representation in compactified coordinates as in original coordinates. The height and boost functions are
+Again, we have great flexibility in chosing the height function. The main requirement is that the term $(1-H^2)/G$ is regular at $\rho=1$. We demonstrate the case where the outgoing plane wave has the same coordinate representation in compactified coordinates as in original coordinates via \eqref{eq:invariant}. The height and boost functions are
 \[ h(r) = r - 1 + e^{-r}, \qquad H(\rho) = \rho. \]
 The Helmholtz equation is
 \[  (1-\rho) d_\rho^2 u + (2 \iu k \rho - 1) d_\rho u + \left(k^2(1+\rho) + \iu k \right) u = 0. \]
@@ -254,91 +285,50 @@ The Helmholtz equation is
 \subsection{Example 5 (algebraic)}
 The algebraic map from \cite{GroschOrszag77} is
 \be\label{eq:ext_mapping} r = \frac{\rho}{1-\rho}, \qquad G(\rho) = (1-\rho)^2. \ee
-Proceeding as in the previous example, we set
+Proceeding as in \eqref{eq:invariant}, we set
 \[ h(r) = \frac{r^2}{1+r},\qquad H(\rho) = (2-\rho)\rho.\]
 The Helmholtz equation becomes
 \[ (1-\rho)^2 d_\rho^2 u + 2 \left( \iu k \rho (2-\rho) - (1-\rho) \right)d_\rho u + \left( k^2 (1+(2-\rho)\rho) + 2 \iu k (1-\rho)  \right) u = 0. \]
-\subsection{Relation to time transformations}\label{sec:time}
-
-We use the spatial mapping \eqref{eq:space_compact1d} for null infinity compactification in time-domain. To avoid infinite oscillations at the domain boundary, a new time coordinate, $\tau$, must be introduced. There is large freedom in the choice of coordinates. We require that the new time coordinate satisfies $\partial_\tau=\partial_t$ so that the transformed equation has time-independent coefficients. In relativity, this requirement corresponds to the invariance of the time translation symmetry of the underlying Minkowski metric. The time transformation takes the form
-
-The height function in our example reads $h(\rho)=-\tfrac{1}{2}\ln(1-\rho^2)$. The time transformation changes the propagation of outgoing characteristics in the time domain. Consider the outgoing characteristics of the wave equation $t-r=$const. We get in terms of the new coordinates
-The propagation speed of outgoing characteristics in this example is $(1+\rho)$ which reaches its maximum value at the outer boundary of the domain. The increase in the propagation speed is related to the flattening of outgoing waves after time transformation. We can also observe this effect in the transformed Sommerfeld radiation condition \eqref{eq:simple_sommerfeld} where the effective wavenumber is half of its original value. This flattening of the waves is crucial for the numerical efficiency of the compactification method.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Higher dimensions}\label{sec:nic}
+\section{Generalizations}\label{sec:nic_general}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-The simple example presented in the previous section generalizes to arbitrary dimensions with a few modifications. In higher dimensions, we remove the decay of the oscillatory solution to ensure regularity of the transformed equation. The transformation is performed along the outgoing direction towards infinity. We summarize the transformation with the following directive: Scale out the oscillatory decay and compactify
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Higher dimensions}\label{sec:high_d}
+The examples presented in the previous section generalize to arbitrary dimensions with a few modifications. In higher dimensions, we remove the decay of the oscillatory solution to ensure regularity of the transformed equation. The transformation is performed along the outgoing direction towards infinity. We summarize the transformation with the following directive: Scale out the oscillatory decay in the radial direction and compactify. We write the transformation as
 \be\label{eq:summary} u(\rho, \omega^{d-1}) = r(\rho)^{\tfrac{d-1}{2}} e^{-\iu k h(\rho)} U(r(\rho), \omega^{d-1})\,.\ee
-Here, $\omega^{d-1}$ are angular coordinates on a $d-1$ dimensional sphere, $h(\rho)$ is a suitably chosen height function satisfying certain asymptotic conditions, and $r(\rho)$ is the compactification of the radial coordinate $r$. Below we present these steps in detail on the Helmholtz equation in spherical coordinates
+Here, $\omega^{d-1}$ are angular coordinates on a $d-1$ dimensional sphere, $h(\rho)$ is a suitably chosen height function satisfying certain asymptotic conditions, and $r(\rho)$ is the compactification of the radial coordinate $r$. 
+
+The Helmholtz equation in spherical coordinates reads
 \begin{equation}\label{eq:helm_sph}
 	\partial_r^2 U + \frac{d-1}{r} \partial_r U + \frac{1}{r^2}\triangle_{S^{d-1}} U + k^2 U = F,
 \end{equation}
-where $\triangle_{S^{d-1}}$ is the Laplace operator on the $d-1$ dimensional sphere $S^{d-1}$. We perform the steps listed in the Introduction to derive the null infinity compactification of this equation.
+where $\triangle_{S^{d-1}}$ is the Laplace operator on the $d-1$ dimensional sphere $S^{d-1}$, and $F$ is a source term that we assume to fall-off at least as $r^2$. We perform the steps listed in the Introduction to derive the null infinity compactification of this equation.
 
 (i) We introduce the rescaled variable $\tilde{U}$ which scales out the fall-off behavior of the unknown near infinity via $\tilde{U} = r^{\tfrac{d-1}{2}} U$. The rescaling removes the first order derivative in $r$ in exchange for a low-order term that falls off as $r^2$. The Helmholtz equation becomes after division by $r^{\tfrac{1-d}{2}}$
 \[ \partial_r^2 \tilde{U} + \frac{1}{r^2}\triangle_{S^{d-1}} \tilde{U} + \left(k^2 - \frac{(1-d)(3-d)}{4 r^2} \right) \tilde{U} = F r^{\tfrac{d-1}{2}}. \]
-We will see in step (iii) that the $r^{-2}$ behavior of the terms that vanish for $d=1$ is just right for the regularity of the transformed equation when $d>1$. 
+The terms that differ from the one-dimensional case fall-off at least as $r^2$. This fall-off guarantees the regularity of null infinity compactification.
 
-With this rescaling, the value of the unknown at infinity is a non-vanishing constant. The Sommerfeld radiation condition becomes
-\[ \partial_r \tilde{U} - \iu k \tilde{U} = o(1) \quad \mathrm{as} \ r\to\infty. \]
-
-(ii) In the second step, we introduce a rescaled variable $u$ which scales out the oscillatory behavior of the unknown near infinity via $u=e^{-\iu k h(r)} \tilde{U}$. This rescaling is the crucial step in Eq.~\eqref{eq:trafo1d}, and is related to a transformation of the time coordinate in the wave equation \cite{ZengFramework} as we demonstrated on the simple example in Sec.~\ref{sec:time}. We refer to $h(r)$ as the height function as is common in relativity \cite{reinhart1973maximal, beig1996vacuum}. The Helmholtz equation becomes after division by $e^{\iu k h}$
+(ii) In the second step, we introduce a rescaled variable $u$ which scales out the oscillatory behavior of the unknown near infinity as in \eqref{eq:rescaling}.. The Helmholtz equation becomes after division by $e^{\iu k h}$ (compare \eqref{eq:resc_helm})
 \begin{align*}
 	\partial_r^2 u & + 2 \iu k H \partial_r u + \frac{1}{r^2}\triangle_{S^{d-1}} u +                                        \\
 	        & \left[k^2 \left(1- H^2\right) - \frac{(1-d)(3-d)}{4 r^2} + \iu k \, d_r H \right] u = F r^{\tfrac{d-1}{2} e^{-\iu k h}},
 \end{align*}
-where $H:=d_r h$ is the radial derivative of the height function and is called the boost in analogy to Lorentz boosts. Inspecting the terms in the equation with respect to the powers of $k$, we recognize the analogs of eikonal and transport equations. The height function, $h$, plays the role of the phase, and the unknown, $u$, plays the role of the amplitude. The difference is that here the height function is prescribed explicitly such that the boost, $H$, satisfies \cite{Zenginoglu08, ZengFramework, jaramillo2021pseudospectrum}
-\begin{equation}
-	H \leq 1, \quad \lim_{r\to\infty} H = 1, \quad \lim_{r\to\infty} d_r H = 0. % \quad \lim_{r\to\infty}\frac{d^2h}{dr^2} = 0 \]
-\end{equation}
-The Sommerfeld radiation condition written in terms of the rescaled unknown $u$ is independent of the wave number
-\[ \partial_r u = o(1) \quad \mathrm{as} \ r\to\infty. \]
+The rescaling removes asymptotic oscillations from the solution, making the equation amenable to compactification. The rescalings in the examples in Sect.~\ref{sec:examples} are valid in higher dimensions along the radial direction.
 
-The rescaling removes asymptotic oscillations from the solution, making the equation amenable to compactification. There is considerable freedom in specific choices for the height function that satisfy \eqref{eq:h_cond} (see \cite{Zenginoglu08} for asymptotic conditions in asymptotically flat spacetimes and \cite{Macedo_2020} for a review of choices in the context of rotating black hole spacetimes). 
-
-For example, setting $h(r)=r$, with $H=1$, removes all oscillations for an outgoing spherical wave centered at the origin. This choice corresponds to using the outgoing characteristics, $t-r$, as a time coordinate. The outgoing spherical wave in three dimensions, $U(r)=e^{\iu k r}/r$, becomes $u=1$. Various methods use similar rescalings to study Helmholtz equations. The infinite element method \cite{demkowicz2006few} and the perfectly absorbing layer \cite{wang2017perfect, yang2021truly} both use this rescaling to remove the oscillations from the outgoing solution. The pole condition in \cite{schmidt2008pole} is also related to this rescaling through the Laplace-transformation in combination with the scaling out of the asymptotic decay. The height function approach generalizes these methods in a geometric framework and increases the flexibility of null infinity compactification for handling heterogeneous media and smoothly matched layers. When the boost is strictly less than unity, we get compactification along hyperboloidal time surfaces \cite{Zenginoglu08}. 
-
-(iii) Having removed the asymptotic decay and oscillations from the solution, we map the infinite domain in $r$ to a finite domain in a new radial coordinate $\rho$. Such mappings are well-known and have been extensively studied \cite{GroschOrszag77, boyd1982optimization, shen2009some, wang2017perfect}. Consider a mapping of the form
-\[ r = g(\rho), \quad r\in[0,\infty),\ \rho\in[0,S), \]
-such that
-\begin{align*}
-	 & \frac{dr}{d\rho} = g'(\rho) \equiv \frac{1}{G(\rho)} > 0, \quad \rho\in [0,S), \\
-	 & g(0)      = 0, \qquad g(S) = \infty.
-\end{align*}
-Here, $S$ is the location of the outer boundary. The Helmholtz equation becomes after a division by $G(\rho)$
+(iii) Having removed the asymptotic decay and oscillations from the solution, we map the infinite domain in $r$ to a finite domain in $\rho$ as in the one-dimensional case of Sect.~\ref{sec:nic1d}. The Helmholtz equation in higher dimensions becomes after a division by $G(\rho)$ (compare \eqref{eq:trafo_helm})
 \begin{align}
 	\label{eq:hyp_general}
-	G \partial_\rho^2 u & + \left( d_\rho G + 2 \iu k H \right) \partial_\rho u + \frac{1}{G g^2}\triangle_{S^{d-1}} u +  \nonumber                        \\
-	               & \left[k^2 \frac{1-H^2}{G} - \frac{(1-d)(3-d)}{4} \frac{1}{G g^2} + \iu k d_\rho H \right] u = \frac{F}{G} g^{\tfrac{d-1}{2}} e^{-\iu k h}.
+	G \partial_\rho^2 u & + \left( d_\rho G + 2 \iu k H \right) \partial_\rho u + \frac{1}{G r^2}\triangle_{S^{d-1}} u +  \nonumber                        \\
+	               & \left[k^2 \frac{1-H^2}{G} - \frac{(1-d)(3-d)}{4} \frac{1}{G r^2} + \iu k d_\rho H \right] u = \frac{F}{G} r^{\tfrac{d-1}{2}} e^{-\iu k h}.
 \end{align}
-This equation is the general form of the Helmholtz equation under the proposed null infinity compactification. We recover the standard Helmholtz equation for $g(\rho) = \rho$ implying $G(\rho)=1$ and $H(\rho)=0$. The regularity of the equation depends on the source function $F$. Our experiments consider source-free equations, but the method can incorporate compactly supported or sufficiently fast decaying source terms. The boost conditions and compactification guarantee the regularity of the other terms with divisions by $G$. We present a few specific examples next.
-
-\subsection{Specific choices of free functions}
-There is considerable freedom in the mapping $g(\rho)$ and the height function $h(\rho)$. A numerical analysis of the various choices is outstanding. The optimal choice will depend on the problem, but generally, the regularity of the transformed Helmholtz equation \eqref{eq:hyp_general} follows if $1-H^2\sim G\sim g^{-2}$ near the outer boundary at $\rho=S$. 
-
-The simple example presented in Sect.~\ref{sec:simple} includes the following choices
-\[ d=1, \quad F(\rho)=0, \quad g(\rho)=\tan \rho, \quad G(\rho) = \cos^2\rho, \quad h(\rho) =\tan\rho - \rho, \quad H(\rho)= \sin^2\rho\,.\]
-The outer boundary is at $S=\tfrac{\pi}{2}$. We have $(1-H^2)/G = 1+\sin^2\rho$, and $G g^2 = \sin\rho$, so the transformed equation \eqref{eq:transformed} is regular at the outer boundary. 
-
-For most numerical experiments presented in this paper, we specify the mapping $g$ and the height function $h$ as follows
-\begin{align} 
-\label{eq:g}
-g(\rho) = \frac{\rho}{1-\rho} \quad &\mathrm{with}\quad G(\rho) \equiv \left(\frac{d g(\rho)}{d\rho}\right)^{-1} = (1-\rho)^2\,, \\
-\label{eq:h}
-h(\rho) = g(\rho) - \frac{\rho}{K} \quad &\mathrm{with}\quad H(\rho) \equiv G(\rho) \frac{d h(\rho)}{d\rho} = 1 - \frac{\Omega(\rho)}{K} 
-\end{align}
-where $K>0$ is a parameter that will be used to adapt the transformation to high-frequency wave propagation, and we define $\Omega(\rho):=\sqrt{G(\rho)} = 1-\rho$. 
-The resulting Helmholtz equation reads
-\begin{align}\label{eq:hyp_specific}
-	\Omega^2 \partial_\rho^2 u & - 2\left(\Omega - \iu k \left(1-\frac{\Omega^2}{K}\right)\right) \partial_\rho u + \frac{1}{\rho^2}\triangle_{S^{d-1}} u + \nonumber \\
-	             & \left[k^2 \left( \frac{2}{K} - \frac{\Omega^2}{K^2} \right) - \frac{(1-d)(3-d)}{4 \rho^2} + 2 \iu k \frac{\Omega}{K} \right] u = \frac{F}{\Omega^2} \left(\frac{\rho}{\Omega}\right)^{\tfrac{d-1}{2}} e^{-\iu k h}
-\end{align}
-The equation is regular at infinity where $G=0$ if the source term $F$ falls off sufficiently fast towards infinity. The transformed Helmholtz operator is essentially the Helmholtz operator in hyperbolic space \cite{stoll2016harmonic}. 
-
+In this equation, $r$ is a function of $\rho$. The regularity of the equation requires a similar condition on the combination of spatial compactification and rescaling as in one dimension (finite $(1-H^2)/G$). In higher dimensions, we also need the compactification to satisfy $G(\rho)r(\rho)^2>0$ at the outer boundary of the domain. This condition rules out spatial compactification with exponential dependence, such as the Examples 1 and 4 from the previous section.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Variable coefficients}
 
-Helmholtz equations with variable coefficients arise in various problems such as seismic full waveform inversion or gravitational waves in curved spacetimes. The Green function may not be readily available in such problems. We can nevertheless apply null infinity compactification if certain asymptotic conditions are fulfilled.  
+Helmholtz equations with variable coefficients arise in various problems such as seismic full waveform inversion or black-hole perturbation theory. The Green function may not be readily available in such problems. We can nevertheless apply null infinity compactification if certain asymptotic conditions are fulfilled.  
 
 Consider the one-dimensional case with general coefficients
 \[ a(x) \, d_x^2 U + b(x) \, d_x U + c(x) U = 0 \]
@@ -346,12 +336,14 @@ For demonstration, we rescale as $u=e^{-\iu h(x)} U$ and map infinity to the ori
 \[ a \rho^2 d_\rho^2 u + \left( 2 a \rho - b - 2 \iu a H \right) d_\rho u + \left[ \frac{c-a H^2}{\rho^2} + \iu H \frac{b}{\rho^2} + H_\rho a \right] u = 0 \]
 The regularity of the equation at infinity requires the coefficients of the Helmholtz equation to be regular at infinity. In addition, we get the fall-off conditions $b=O(x^{-2})$ and $c-a H^2=O(x^{-2})$.
 
+\textcolor{red}{Describe the Schwarzschild case here at some detail. Provide equations.}
+
 Compactification for equations with variable coefficients is particularly relevant for black hole perturbations where the potential in the equation arising from a non-vanishing spacetime curvature extends to infinity \cite{regge1957stability}. We can nevertheless compute such perturbations at null infinity because the fall-off conditions are satisfied in asymptotically flat spacetimes \cite{ZengFramework, jaramillo2021pseudospectrum}. Similarly, this technique may be helpful when waves propagate in heterogeneous media that fill out the entire solution domain.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{A null infinity layer}\label{sec:nil}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-We showed in Sec.~\ref{sec:dispersion} that the transformed wavenumber for incoming waves \eqref{eq:incoming} is higher than the transformed wavenumber for outgoing waves. Near the scatterer, where waves propagate in all directions, null infinity compactification would decrease the accuracy of the numerical solution for incoming waves. Therefore, it is better to use standard coordinates around the scatterer and restrict null infinity compactification to an outer layer (Fig.~\ref{fig:annulus}). Similar thin layers are already commonly used due to the popularity of absorbing and damping layers, such as the perfectly matched layer \cite{BERENGER1994185} or the perfect absorbing layer \cite{wang2017perfect, yang2021truly}. In our case, the solution is not artificially damped. Instead, the layer carries outgoing waves to infinity faster than they would otherwise propagate. 
+Near the scatterer, where waves propagate in all directions, null infinity compactification would decrease the accuracy of the numerical solution for incoming waves. Therefore, it is better to use standard coordinates around the scatterer and restrict null infinity compactification to an outer layer (Fig.~\ref{fig:annulus}). Similar thin layers are already commonly used due to the popularity of absorbing and damping layers, such as the perfectly matched layer \cite{BERENGER1994185} or the perfect absorbing layer \cite{wang2017perfect, yang2021truly}. In our case, the solution is not artificially damped. Instead, the layer carries outgoing waves to infinity faster than they would otherwise propagate. 
 
 \begin{figure}[tbhp]
 \centering
@@ -381,6 +373,30 @@ where $\Theta$ is the Heaviside step function and $n$ is an integer power. The h
 \[ g(R) = R, \quad d_\rho g(R) = 1, \quad d_\rho^n g(R) = 0 \ \mathrm{for} \ n>1. \] 
 The optimal choice of the coordinate transformation in the null infinity layer will depend on the problem. For example, \cite{bernuzzi2011binary} uses $n=4$ in the definition of $\Omega$ to get higher derivatives at the layer interface, and \cite{hilditch2018evolution} chooses a smooth transition function instead of the Heaviside function.
 
+
+\subsection{Specific choices of free functions}
+There is considerable freedom in the mapping $g(\rho)$ and the height function $h(\rho)$. A numerical analysis of the various choices is outstanding. The optimal choice will depend on the problem, but generally, the regularity of the transformed Helmholtz equation \eqref{eq:hyp_general} follows if $1-H^2\sim G\sim g^{-2}$ near the outer boundary at $\rho=S$. 
+
+The simple example presented in Sect.~\ref{sec:simple} includes the following choices
+\[ d=1, \quad F(\rho)=0, \quad g(\rho)=\tan \rho, \quad G(\rho) = \cos^2\rho, \quad h(\rho) =\tan\rho - \rho, \quad H(\rho)= \sin^2\rho\,.\]
+The outer boundary is at $S=\tfrac{\pi}{2}$. We have $(1-H^2)/G = 1+\sin^2\rho$, and $G g^2 = \sin\rho$, so the transformed equation \eqref{eq:transformed} is regular at the outer boundary. 
+
+For most numerical experiments presented in this paper, we specify the mapping $g$ and the height function $h$ as follows
+\begin{align} 
+\label{eq:g}
+g(\rho) = \frac{\rho}{1-\rho} \quad &\mathrm{with}\quad G(\rho) \equiv \left(\frac{d g(\rho)}{d\rho}\right)^{-1} = (1-\rho)^2\,, \\
+\label{eq:h}
+h(\rho) = g(\rho) - \frac{\rho}{K} \quad &\mathrm{with}\quad H(\rho) \equiv G(\rho) \frac{d h(\rho)}{d\rho} = 1 - \frac{\Omega(\rho)}{K} 
+\end{align}
+where $K>0$ is a parameter that will be used to adapt the transformation to high-frequency wave propagation, and we define $\Omega(\rho):=\sqrt{G(\rho)} = 1-\rho$. 
+The resulting Helmholtz equation reads
+\begin{align}\label{eq:hyp_specific}
+	\Omega^2 \partial_\rho^2 u & - 2\left(\Omega - \iu k \left(1-\frac{\Omega^2}{K}\right)\right) \partial_\rho u + \frac{1}{\rho^2}\triangle_{S^{d-1}} u + \nonumber \\
+	             & \left[k^2 \left( \frac{2}{K} - \frac{\Omega^2}{K^2} \right) - \frac{(1-d)(3-d)}{4 \rho^2} + 2 \iu k \frac{\Omega}{K} \right] u = \frac{F}{\Omega^2} \left(\frac{\rho}{\Omega}\right)^{\tfrac{d-1}{2}} e^{-\iu k h}
+\end{align}
+The equation is regular at infinity where $G=0$ if the source term $F$ falls off sufficiently fast towards infinity. The transformed Helmholtz operator is essentially the Helmholtz operator in hyperbolic space \cite{stoll2016harmonic}. 
+
+
 \subsection{Relationship to PML and PAL}
 The most commonly used absorbing layer in the literature is the perfectly matched layer (PML) \cite{BERENGER1994185}. PML is equivalent to a complex coordinate transformation \cite{chew19943d}. It is very flexible and convenient to use in various coordinates \cite{collino1998perfectly}. Recently, an improved version has been proposed using a complex mapping and rescaling called the perfect absorbing layer (PAL) \cite{wang2017perfect, yang2021truly}. Both PML and PAL damp outgoing waves propagating through the layer.
 
@@ -403,7 +419,8 @@ While the NIL solution looks the same as the standard plane-wave solution, the t
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Numerical experiments}\label{sec:numerical}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Example 1: Plane wave in 1D}\label{sec:oned}
+
+\subsection{Experiment 1: Plane wave in 1D}\label{sec:oned}
 One-dimensional examples are generally not representative of the difficulties related to the outer boundary problem. In our case, however, the essential elements of null infinity compactification are present in one dimension because the transformation acts in the radial direction. Once radial and angular directions are separated, the technique in higher dimensions is similar to its implementation in one dimension because the dynamics of outgoing waves in the asymptotic region is essentially one-dimensional.
 
 Consider the following one-dimensional problem on an unbounded domain
@@ -452,7 +469,7 @@ We solve \eqref{eq:oneD} and \eqref{eq:hyp_1d} using two numerical discretizatio
 
 Figure \ref{fig:errs_oned} shows the corresponding numerical errors for the two schemes. The spectral method is more accurate, as expected. The plots also demonstrate the increased efficiency of the transformed solution for $K=k$. In this particular example, one can freely choose a large $K$. In fact, the characteristic foliation with $h(\rho) =g(\rho)$ leads to the transformed solution $u(\rho)=1$. 
 
-\subsubsection{Example 2: Single mode in 2D} 
+\subsubsection{Experiment 2: Single mode in 2D} 
 We consider the source free Helmholtz equation in 2D. We set $d=2$ and $F=0$ in \eqref{eq:helm_sph} and write the equation as a sequence of 1-D equations by expanding the unknown in polar coordinates, $U=\sum U_m(r) e^{\iu m \theta}$. Dropping the subscript $m$, we write
 \begin{equation}
 	 U_{rr} + U_r + \left(k^2 - \frac{m^2}{r^2}\right)U = 0.
@@ -491,7 +508,7 @@ The radial dependence of the transformed solution is plotted for $k=40$ and $m=2
 
 
 
-\subsubsection{Example 3: Scattering of incoming waves}
+\subsubsection{Experiment 3: Scattering of incoming waves}
 This section discusses a scattering problem both in NIC and NIL coordinates. In NIC, the transformation is applied throughout the entire numerical domain, while in NIL, it is restricted to a thin outer layer.  It may be beneficial in certain applications to use NIL, but the layer should be generally avoided if the waves are predominantly outgoing. For the calculations, we set the height function as in \eqref{eq:h} with $K=1$,  and the spatial transformation as in \eqref{eq:g} for NIC and \eqref{eq:layer} for NIL. The equation is given in \eqref{eq:hyp_2d} where we set $K=1$.
 
 We consider a plane wave in the $x$-direction, $e^{\iu k x} = e^{\iu k r \cos\theta}$, scattered off a circle of radius $R_0=1$. The incident plane wave does not satisfy the Sommerfeld radiation condition in 2D and therefore is not regular at null infinity. The scattered solution is outgoing at infinity and is therefore regular. The total field is the sum of the impinging field and the scattered field, implying the following Dirichlet boundary condition for the scattered field:
