@@ -2,15 +2,15 @@
 # Differentiation matrices
 ####################################
 
-import scipy.sparse as sp
+import scipy.sparse as sps
 import numpy as np
 
 # Finite difference
 def fd_o2(Nx, dx, periodic=False):
 
     # First derivative
-    D_1d = sp.diags([-1, 1], [-1, 1], shape=(Nx, Nx))
-    D_1d = sp.lil_matrix(D_1d)
+    D_1d = sps.diags([-1, 1], [-1, 1], shape=(Nx, Nx))
+    D_1d = sps.lil_matrix(D_1d)
     if periodic:
         D_1d[0, -1] = -1  #
         D_1d[-1, 0] = 1  #
@@ -19,8 +19,8 @@ def fd_o2(Nx, dx, periodic=False):
         D_1d[-1, [-3, -2, -1]] = [1, -4, 3]
 
     # Second derivative
-    D2_1d = sp.diags([1, -2, 1], [-1, 0, 1], shape=(Nx, Nx))
-    D2_1d = sp.lil_matrix(D2_1d)
+    D2_1d = sps.diags([1, -2, 1], [-1, 0, 1], shape=(Nx, Nx))
+    D2_1d = sps.lil_matrix(D2_1d)
     if periodic:
         D2_1d[0, -1] = 1
         D2_1d[-1, 0] = 1
@@ -34,8 +34,8 @@ def fd_o2(Nx, dx, periodic=False):
 def fd_o4(Nx, dx, periodic=False):
 
     # First derivative
-    D_1d = sp.diags([1, -8, 8, -1], [-2, -1, 1, 2], shape=(Nx, Nx))
-    D_1d = sp.lil_matrix(D_1d)
+    D_1d = sps.diags([1, -8, 8, -1], [-2, -1, 1, 2], shape=(Nx, Nx))
+    D_1d = sps.lil_matrix(D_1d)
     if periodic:
         D_1d[0, [-1, -2]] = [-8, 1] 
         D_1d[1, [-1]] = [1]  
@@ -48,10 +48,10 @@ def fd_o4(Nx, dx, periodic=False):
         D_1d[-2, [-5, -4, -3, -2, -1]] = [-1, 6, -18, 10, 3]
 
     # Second derivative
-    D2_1d = sp.diags(
+    D2_1d = sps.diags(
         [-1, 16, -30, 16, -1], [-2, -1, 0, 1, 2], shape=(Nx, Nx)
     )
-    D2_1d = sp.lil_matrix(D2_1d)
+    D2_1d = sps.lil_matrix(D2_1d)
     if periodic:
         D2_1d[0, [-1, -2]] = [16, -1]
         D2_1d[1, [-1]] = [-1]
@@ -69,10 +69,10 @@ def fd_o4(Nx, dx, periodic=False):
 def fd_o6(Nx, dx, periodic=False):
 
     # First derivative
-    D_1d = sp.diags(
+    D_1d = sps.diags(
         [-1, 9, -45, 45, -9, 1], [-3, -2, -1, 1, 2, 3], shape=(Nx, Nx)
     )
-    D_1d = sp.lil_matrix(D_1d)
+    D_1d = sps.lil_matrix(D_1d)
     if periodic:
         D_1d[0, [-1, -2, -3]] = [-45, 9, -1]  #
         D_1d[1, [-1, -2]] = [9, -1]  #
@@ -89,10 +89,10 @@ def fd_o6(Nx, dx, periodic=False):
         D_1d[-3, [-7, -6, -5, -4, -3, -2, -1]] = [1, -8, 30, -80, 35, 24, -2]
 
     # Second derivative
-    D2_1d = sp.diags(
+    D2_1d = sps.diags(
         [2, -27, 270, -490, 270, -27, 2], [-3, -2, -1, 0, 1, 2, 3], shape=(Nx, Nx)
     )
-    D2_1d = sp.lil_matrix(D2_1d)
+    D2_1d = sps.lil_matrix(D2_1d)
     if periodic:
         D2_1d[0, [-1, -2, -3]] = [270, -27, 2]  #
         D2_1d[1, [-1, -2]] = [-27, 2]  #
@@ -129,7 +129,7 @@ def cheb(N, r0, r1):
     D1 = 2.0 / (r1 - r0) * D
     D2 = 4.0 / (r1 - r0) ** 2 * D.dot(D)
     return D1[::-1,::-1], D2[::-1,::-1], r[::-1]
-    
+
 # def Diff_mat_2D(Nx, Ny, y_periodic=False, y_order=2):
 
 #     # 1D differentiation matrices
@@ -144,17 +144,17 @@ def cheb(N, r0, r1):
 #         print("y_order " + str(y_order) + " has not been implemented")
 
 #     # Sparse identity matrices
-#     Ix = sp.eye(Nx)
-#     Iy = sp.eye(Ny)
+#     Ix = sps.eye(Nx)
+#     Iy = sps.eye(Ny)
 
 #     # 2D matrix operators from 1D operators using kronecker product
 #     # First partial derivatives
-#     Dx_2d = sp.kron(Iy, Dx_1d)
-#     Dy_2d = sp.kron(Dy_1d, Ix)
+#     Dx_2d = sps.kron(Iy, Dx_1d)
+#     Dy_2d = sps.kron(Dy_1d, Ix)
 
 #     # Second partial derivatives
-#     D2x_2d = sp.kron(Iy, D2x_1d)
-#     D2y_2d = sp.kron(D2y_1d, Ix)
+#     D2x_2d = sps.kron(Iy, D2x_1d)
+#     D2y_2d = sps.kron(D2y_1d, Ix)
 
 #     # Return compressed Sparse Row format of the sparse matrices
 #     return Dx_2d.tocsr(), Dy_2d.tocsr(), D2x_2d.tocsr(), D2y_2d.tocsr()
