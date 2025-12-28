@@ -10,6 +10,7 @@
 \usepackage{algorithmic}
 \usepackage[mathlines]{lineno} % number lines including inside math
 \usepackage[export]{adjustbox}
+\usepackage{todonotes}
 
 \ifpdf
   \DeclareGraphicsExtensions{.eps,.pdf,.png,.jpg}
@@ -700,8 +701,10 @@ x^2 \Omega^2 + y^2L^2
 \end{pmatrix}, \qquad 
 B = 2 \iu k - \frac{\Omega^2}{L \rho} (1+2\iu k \rho),\\
 C &= k^2 \left(2-\frac{\Omega^2}{L}\right) +\frac{L}{4 \rho ^2} -\frac{i k \Omega}{L^2} \left(\frac{2 L (\Omega-L)}{\rho }+\Omega
-\Omega'' \rho \right) .
+\Omega'' \rho \right) . \\
+C &= k^2 \left(2-G\right) +\frac{L}{4 \rho ^2} - i k L \Omega G'.
 \end{align*}
+\todo[inline]{How are you going to write $A, B, C$?}
 
 \begin{figure}[ht]
 	\centering
